@@ -1,213 +1,281 @@
 
 <html>
-	<head>
-		<title>FCON losses in Branch</title>
-		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-	</head>
-	<style>
-		.isk{
-			color: goldenrod;
-			font-weight: bold;
-		}	
-		#iskWorking{
-			font-weight: normal;
-			font-size: 14px;
-		}
-		#Results{
-			display:none;
-		}
-		body{
-			padding:24px;
-		}
-		.dateField{
-			color:black;
-		}
-		#logo{
-			margin-right:8px;
-		}
-		.progress {
-		    position: relative;
-		}
-		
-		.progress span {
-		    position: absolute;
-		    display: block;
-		    width: 100%;
-		    color: black;
-		 }
-	</style>
-			
-	<body>
-	<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-	<script>
-		
-		var Corps = [];
-		var weekTotal = 0;
-		
-		Date.prototype.getWeek = function() {
-	        var onejan = new Date(this.getFullYear(), 0, 1);
-	        return Math.ceil((((this - onejan) / 86400000) + onejan.getDay() + 1) / 7);
-	    }
-		
-		function AddToCorp(corpName, value){
-			if (Corps[corpName] != undefined){
-				Corps[corpName].lost += value;
-			}
-			else
-			{
-				var corp = {
-					lost: value,
-					name: corpName
-				};
-				Corps[corpName] = corp;
-			}
-		}
-		
-		function GetTotal(startTime, endTime, control, callback){
-			var urlString = "https://zkillboard.com/api/losses/regionID/10000055/allianceID/1006830534/startTime/" +
-				startTime + "/endTime/" + endTime +"/no-attackers/no-items/";
-		
-			$.get(urlString, function(data) {
-				var total = 0;
-				for (var idx=0;idx<data.length;idx++){
-					total += data[idx].zkb.totalValue;
-				}
-				control.html(total.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,'));
-				callback();
-			});
-		}
-		
-		function Sort(array){
-			var trueArray = [];
-			for (var key in array){
-				var newCorp = {
-					name: array[key].name,
-					lost: array[key].lost
-				};
-				
-				trueArray.push(
+<head>
+    <title>FCON losses in Branch</title>
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <style>
+        .isk {
+            color: goldenrod;
+            font-weight: bold;
+        }
+
+        #iskWorking {
+            font-weight: normal;
+            font-size: 14px;
+        }
+
+        #Results {
+            display: none;
+        }
+
+        body {
+            padding: 24px;
+        }
+
+        .dateField {
+            color: black;
+        }
+
+        #logo {
+            margin-right: 8px;
+        }
+
+        .progress {
+            position: relative;
+        }
+
+            .progress span {
+                position: absolute;
+                display: block;
+                width: 100%;
+                color: black;
+            }
+
+        #highscoreHeader {
+            background-color: lightslategray;
+            color: black;
+            font-weight: bold;
+            font-size: 24px;
+            padding: 6px;
+            text-align:center;
+        }
+
+        .pos {
+            width: 32px;
+            text-align: center;
+            font-weight: bold;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+            .pos img {
+                width: 24px;
+                height: 24px;
+            }
+
+        #highscoreTable {
+            width: 100%;
+        }
+
+            #highscoreTable tr {
+                width: 100%;
+            }
+
+            #highscoreTable td {
+                
+            }
+            table td, table th{
+                border: 0 !important;
+            }
+    </style>
+</head>
+<body>
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script>
+
+        var Corps = [];
+        var weekTotal = 0;
+
+        Date.prototype.getWeek = function () {
+            var onejan = new Date(this.getFullYear(), 0, 1);
+            return Math.ceil((((this - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+        }
+
+        function AddToCorp(corpName, value) {
+            if (Corps[corpName] != undefined) {
+                Corps[corpName].lost += value;
+            }
+            else {
+                var corp = {
+                    lost: value,
+                    name: corpName
+                };
+                Corps[corpName] = corp;
+            }
+        }
+
+        function GetTotal(startTime, endTime, control, callback) {
+            var urlString = "https://zkillboard.com/api/losses/regionID/10000055/allianceID/1006830534/startTime/" +
+				startTime + "/endTime/" + endTime + "/no-attackers/no-items/";
+
+            $.get(urlString, function (data) {
+                var total = 0;
+                for (var idx = 0; idx < data.length; idx++) {
+                    total += data[idx].zkb.totalValue;
+                }
+                control.html(total.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,'));
+                callback();
+            });
+        }
+
+        function Sort(array) {
+            var trueArray = [];
+            for (var key in array) {
+                var newCorp = {
+                    name: array[key].name,
+                    lost: array[key].lost
+                };
+
+                trueArray.push(
 					newCorp
 				)
-			}
-			trueArray.sort(function(a, b) {
-			    a = a.lost;
-			    b = b.lost;
-			
-			    return a > b ? -1 : (a < b ? 1 : 0);
-			});
-				
-			return trueArray;
-		}
-		
-		function UpdateCorpStats(){
-			var corpArray = Sort(Corps);
-			var highest = corpArray[0].lost;
-			
-			for (var idx=0;idx<corpArray.length;idx++){
-				var corp = corpArray[idx];
-				AddCorpLine(corp.name, corp.lost / highest * 100, corp.lost, idx);
-			}
-		}
-		
-		function AddCorpLine(corpname, percentage, lost, idx){
-			$("#stats").append(
-			"<div class=\"row\"><div class=\"col-xs-1\">" + (parseInt(idx)+1) + "</div><div class=\"col-xs-4\">" + corpname + "</div><div class=\"col-xs-7\">" + 
-				"<div class=\"progress\"><div class=\"progress-bar progress-bar-info\" role=\"progressbar\" style=\"width: " + percentage +"%;\">" +
-				"<span><b>ISK " + lost.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + "</b></span>" +
-				"</div></div></div></div>"
-			);
-		}
-		
-		function GetTotalForWeek(week, pagenum, control, total){
-			var d = new Date();
-			var urlString = "https://zkillboard.com/api/losses/regionID/10000055/allianceID/1006830534/week/" + week + "/page/" + pagenum +"/no-attackers/no-items/";
-			var carryOn = true;
-			var nextPage = pagenum+1;
-			
-			$.get(urlString, function(data) {
-					for (var idx=0;idx<data.length;idx++){
-						d = new Date(data[idx].killTime);
-						if (d.getWeek() == week){
-							total += data[idx].zkb.totalValue;
-							AddToCorp(data[idx].victim.corporationName, data[idx].zkb.totalValue);
-							control.html(total.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,'));
-						}
-						else{
-							control.html(total.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,'));
-							weekTotal = total;
-							carryOn = false;
-						}
-					}
-				if (carryOn){
-					GetTotalForWeek(week, nextPage, control, total);
-				}
-				else{
-					UpdateCorpStats();
-				}
-			});
-		}
-		
-		function GetTimeLimit(date){
-			var StartTime = date.getUTCFullYear() +
-							(((date.getUTCMonth()+1) < 10) ? "0" : "") + (date.getUTCMonth()+1) +
-							((date.getUTCDate() < 10) ? "0" : "") + date.getUTCDate();
-			var Time = {
-				End: StartTime + "2359",
-				Start: StartTime + "0000"
-			};
-			return Time;
-		}
-		
-		$(function(){
-			var d = new Date();
-			var weekNo = d.getWeek();
-			$("#todayDate").text(d.toDateString());
-			var today = GetTimeLimit(d);
-			d.setDate(d.getDate()-1);
-			$("#yesterdayDate").text(d.toDateString());
-			var yesterday = GetTimeLimit(d);
+            }
+            trueArray.sort(function (a, b) {
+                a = a.lost;
+                b = b.lost;
 
-			GetTotal(today.Start, today.End, $("#iskValueToday"), function(){
-				GetTotal(yesterday.Start, yesterday.End, $("#iskValueYesterday"), function(){
-					$("#Working").hide();
-		  			$("#Results").show();
-					GetTotalForWeek(weekNo, 1, $("#iskValueWeek"), 0);
-				});
-			});
-		});
-			
-	</script>
-	<div id="Working">
-		<img src="ajax-loader.gif" /> Fetching data..
-	</div>
-	<div id="Results" class="panel panel-default">
-	  <div class="panel-heading">
-	    <h3 class="panel-title"> <span class="glyphicon glyphicon-home" aria-hidden="true"></span> FCON losses in Branch</h3>
-	  </div>
-	  <div class="panel-body">	  	
-	    <div class="row">
-			<div class="col-xs-2 text-right"><h3>Today:<h3></div>
-			<div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueToday"></span></h3></div>
-		</div>
-		<div class="row">
-			<div class="col-xs-2 text-right"><h3>Yesterday:<h3></div>
-			<div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueYesterday"></span></h3></div>
-		</div>
-		<div class="row">
-			<div class="col-xs-2 text-right"><h3>This week:<h3></div>
-			<div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueWeek"></span></h3></div>
-		</div>
-		<div class="row">
-			<div class="col-xs-12">
-				<div id="stats" class="well">
-					
-				</div>
-			</div>
-		</div>
-	  </div>
-	</div>
-	<div>
-		Powered by <a href="https://zkillboard.com/region/10000055/"><b>zKillboard</b></a>
-	</div>
-	</body>
+                return a > b ? -1 : (a < b ? 1 : 0);
+            });
+
+            return trueArray;
+        }
+
+        function UpdateCorpStats() {
+            var corpArray = Sort(Corps);
+            var highest = corpArray[0].lost;
+
+            for (var idx = 0; idx < corpArray.length; idx++) {
+                var corp = corpArray[idx];
+                AddCorpLineTable(corp.name, corp.lost / highest * 100, corp.lost, idx);
+            }
+        }
+
+        function AddCorpLine(corpname, percentage, lost, idx) {
+            var html = "<div class=\"row\"><div class=\"col-xs-5\"><div class=\"pos\">";
+            if (idx < 3) {
+                html += "<img src=\"" + (parseInt(idx) + 1) + ".png\" />";
+            }
+            else {
+                html += (parseInt(idx) + 1);
+            }
+            html += "</div>" + corpname + "</div><div class=\"col-xs-7\">" +
+				"<div class=\"progress\"><div class=\"progress-bar progress-bar-info\" role=\"progressbar\" style=\"width: " + percentage + "%;\">" +
+				"<span><b>ISK " + lost.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + "</b></span>" +
+				"</div></div></div></div>";
+            $("#stats").append(html);
+        }
+
+        function AddCorpLineTable(corpname, percentage, lost, idx) {
+            var html = "<tr><td class=\"pos\">";
+            if (idx < 3) {
+                html += "<img src=\"" + (parseInt(idx) + 1) + ".png\" />";
+            }
+            else {
+                html += (parseInt(idx) + 1);
+            }
+            html += "</td><td style=\"width:0%; white-space: nowrap;\">" + corpname + "</td><td style=\"width:100%\">";
+            html += "<div class=\"progress\"><div class=\"progress-bar progress-bar-info\" role=\"progressbar\" style=\"width: " + percentage + "%;\">" +
+				"<span><b>ISK " + lost.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + "</b></span>" +
+				"</div></div></td></tr>";
+            $("#highscoreTable").append(html);
+        }
+
+
+        function GetTotalForWeek(week, pagenum, control, total) {
+            var d = new Date();
+            var urlString = "https://zkillboard.com/api/losses/regionID/10000055/allianceID/1006830534/week/" + week + "/page/" + pagenum + "/no-attackers/no-items/";
+            var carryOn = true;
+            var nextPage = pagenum + 1;
+
+            $.get(urlString, function (data) {
+                for (var idx = 0; idx < data.length; idx++) {
+                    d = new Date(data[idx].killTime);
+                    if (d.getWeek() == week) {
+                        total += data[idx].zkb.totalValue;
+                        AddToCorp(data[idx].victim.corporationName, data[idx].zkb.totalValue);
+                        control.html(total.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,'));
+                    }
+                    else {
+                        control.html(total.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,'));
+                        weekTotal = total;
+                        carryOn = false;
+                    }
+                }
+                if (carryOn) {
+                    GetTotalForWeek(week, nextPage, control, total);
+                }
+                else {
+                    UpdateCorpStats();
+                }
+            });
+        }
+
+        function GetTimeLimit(date) {
+            var StartTime = date.getUTCFullYear() +
+							(((date.getUTCMonth() + 1) < 10) ? "0" : "") + (date.getUTCMonth() + 1) +
+							((date.getUTCDate() < 10) ? "0" : "") + date.getUTCDate();
+            var Time = {
+                End: StartTime + "2359",
+                Start: StartTime + "0000"
+            };
+            return Time;
+        }
+
+        $(function () {
+            var d = new Date();
+            var weekNo = d.getWeek();
+            $("#weekNo").text(weekNo);
+            $("#todayDate").text(d.toDateString());
+            var today = GetTimeLimit(d);
+            d.setDate(d.getDate() - 1);
+            $("#yesterdayDate").text(d.toDateString());
+            var yesterday = GetTimeLimit(d);
+
+            GetTotal(today.Start, today.End, $("#iskValueToday"), function () {
+                GetTotal(yesterday.Start, yesterday.End, $("#iskValueYesterday"), function () {
+                    $("#Working").hide();
+                    $("#Results").show();
+                    GetTotalForWeek(weekNo, 1, $("#iskValueWeek"), 0);
+                });
+            });
+        });
+
+    </script>
+    <div id="Working">
+        <img src="ajax-loader.gif" /> Fetching data..
+    </div>
+    <div id="Results" class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title"> <span class="glyphicon glyphicon-home" aria-hidden="true"></span> FCON losses in Branch</h3>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-xs-2 text-right"><h3>Today:</h3></div>
+                <div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueToday"></span></h3></div>
+            </div>
+            <div class="row">
+                <div class="col-xs-2 text-right"><h3>Yesterday:</h3></div>
+                <div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueYesterday"></span></h3></div>
+            </div>
+            <div class="row">
+                <div class="col-xs-2 text-right"><h3>This week:</h3></div>
+                <div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueWeek"></span></h3></div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div id="highscoreHeader">
+                        Week <span id="weekNo"></span> highscore
+                    </div>
+                    <div id="stats" class="well">
+                        <table id="highscoreTable" class="table table-condensed"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        Powered by <a href="https://zkillboard.com/region/10000055/"><b>zKillboard</b></a>
+    </div>
+</body>
 </html>
