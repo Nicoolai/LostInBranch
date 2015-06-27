@@ -170,7 +170,8 @@
             else {
                 html += (parseInt(idx) + 1);
             }
-            html += "</div><a href=\"https://zkillboard.com/corporation/" + corpId + "/region/10000055/\">" + corpname + "</a></div><div class=\"col-xs-7\">" +
+            html += "</div><a target=\"_blank\" href=\"https://zkillboard.com/corporation/" + corpId + "/region/10000055/\">" + 
+				corpname + "</a></div><div class=\"col-xs-7\">" +
 				"<div class=\"progress\"><div class=\"progress-bar progress-bar-info\" role=\"progressbar\" style=\"width: " + percentage + "%;\">" +
 				"<span><b>ISK " + lost.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + "</b></span>" +
 				"</div></div></div></div>";
@@ -185,7 +186,7 @@
             else {
                 html += (parseInt(idx) + 1);
             }
-            html += "</td><td style=\"width:0%; white-space: nowrap;\"><a href=\"https://zkillboard.com/corporation/" + corpId +
+            html += "</td><td style=\"width:0%; white-space: nowrap;\"><a target=\"_blank\" href=\"https://zkillboard.com/corporation/" + corpId +
 			 	"/region/10000055/\">" + corpname + "</a></td><td style=\"width:100%\">";
             html += "<div class=\"progress\"><div class=\"progress-bar progress-bar-info\" role=\"progressbar\" style=\"width: " + percentage + 
 				"%;\">" +
