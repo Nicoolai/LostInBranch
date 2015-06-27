@@ -1,5 +1,3 @@
-
-
 <html>
 <head>
     <title>FCON losses in Branch</title>
@@ -87,7 +85,6 @@
 
         var Corps = [];
         var weekTotal = 0;
-<<<<<<< HEAD
         
         function getWeekNumber(d) {
             // Copy date so don't modify original
@@ -105,27 +102,14 @@
         }
 
         function AddToCorp(corpName, value, id) {
-=======
-
-        Date.prototype.getWeek = function () {
-            var onejan = new Date(this.getFullYear(), 0, 1);
-            return Math.ceil((((this - onejan) / 86400000) + onejan.getDay() + 1) / 7);
-        }
-
-        function AddToCorp(corpName, value) {
->>>>>>> origin/master
             if (Corps[corpName] != undefined) {
                 Corps[corpName].lost += value;
             }
             else {
                 var corp = {
                     lost: value,
-<<<<<<< HEAD
                     name: corpName,
 					id: id
-=======
-                    name: corpName
->>>>>>> origin/master
                 };
                 Corps[corpName] = corp;
             }
@@ -150,12 +134,8 @@
             for (var key in array) {
                 var newCorp = {
                     name: array[key].name,
-<<<<<<< HEAD
                     lost: array[key].lost,
 					id: array[key].id
-=======
-                    lost: array[key].lost
->>>>>>> origin/master
                 };
 
                 trueArray.push(
@@ -178,19 +158,11 @@
 
             for (var idx = 0; idx < corpArray.length; idx++) {
                 var corp = corpArray[idx];
-<<<<<<< HEAD
                 AddCorpLineTable(corp.name, corp.lost / highest * 100, corp.lost, idx, corp.id);
             }
         }
 
         function AddCorpLine(corpname, percentage, lost, idx, corpId) {
-=======
-                AddCorpLineTable(corp.name, corp.lost / highest * 100, corp.lost, idx);
-            }
-        }
-
-        function AddCorpLine(corpname, percentage, lost, idx) {
->>>>>>> origin/master
             var html = "<div class=\"row\"><div class=\"col-xs-5\"><div class=\"pos\">";
             if (idx < 3) {
                 html += "<img src=\"" + (parseInt(idx) + 1) + ".png\" />";
@@ -198,22 +170,14 @@
             else {
                 html += (parseInt(idx) + 1);
             }
-<<<<<<< HEAD
             html += "</div><a href=\"https://zkillboard.com/corporation/" + corpId + "/region/10000055/\">" + corpname + "</a></div><div class=\"col-xs-7\">" +
-=======
-            html += "</div>" + corpname + "</div><div class=\"col-xs-7\">" +
->>>>>>> origin/master
 				"<div class=\"progress\"><div class=\"progress-bar progress-bar-info\" role=\"progressbar\" style=\"width: " + percentage + "%;\">" +
 				"<span><b>ISK " + lost.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + "</b></span>" +
 				"</div></div></div></div>";
             $("#stats").append(html);
         }
 
-<<<<<<< HEAD
         function AddCorpLineTable(corpname, percentage, lost, idx, corpId) {
-=======
-        function AddCorpLineTable(corpname, percentage, lost, idx) {
->>>>>>> origin/master
             var html = "<tr><td class=\"pos\">";
             if (idx < 3) {
                 html += "<img src=\"" + (parseInt(idx) + 1) + ".png\" />";
@@ -221,15 +185,10 @@
             else {
                 html += (parseInt(idx) + 1);
             }
-<<<<<<< HEAD
             html += "</td><td style=\"width:0%; white-space: nowrap;\"><a href=\"https://zkillboard.com/corporation/" + corpId +
 			 	"/region/10000055/\">" + corpname + "</a></td><td style=\"width:100%\">";
             html += "<div class=\"progress\"><div class=\"progress-bar progress-bar-info\" role=\"progressbar\" style=\"width: " + percentage + 
 				"%;\">" +
-=======
-            html += "</td><td style=\"width:0%; white-space: nowrap;\">" + corpname + "</td><td style=\"width:100%\">";
-            html += "<div class=\"progress\"><div class=\"progress-bar progress-bar-info\" role=\"progressbar\" style=\"width: " + percentage + "%;\">" +
->>>>>>> origin/master
 				"<span><b>ISK " + lost.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + "</b></span>" +
 				"</div></div></td></tr>";
             $("#highscoreTable").append(html);
@@ -245,15 +204,9 @@
             $.get(urlString, function (data) {
                 for (var idx = 0; idx < data.length; idx++) {
                     d = new Date(data[idx].killTime);
-<<<<<<< HEAD
                     if (getWeekNumber(d) == week) {
                         total += data[idx].zkb.totalValue;
                         AddToCorp(data[idx].victim.corporationName, data[idx].zkb.totalValue, data[idx].victim.corporationID);
-=======
-                    if (d.getWeek() == week) {
-                        total += data[idx].zkb.totalValue;
-                        AddToCorp(data[idx].victim.corporationName, data[idx].zkb.totalValue);
->>>>>>> origin/master
                         control.html(total.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,'));
                     }
                     else {
@@ -284,11 +237,7 @@
 
         $(function () {
             var d = new Date();
-<<<<<<< HEAD
             var weekNo = getWeekNumber(d);
-=======
-            var weekNo = d.getWeek();
->>>>>>> origin/master
             $("#weekNo").text(weekNo);
             $("#todayDate").text(d.toDateString());
             var today = GetTimeLimit(d);
