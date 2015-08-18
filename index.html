@@ -110,12 +110,81 @@
         table td, table th {
             border: 0 !important;
         }
+
+        .sub {
+            font-size: 10pt;
+            color: darkgray;
+            font-weight: normal;
+        }
+
+        #calDiv {
+            background-image: url("cal.png");
+            background-position: left center;
+            background-repeat: no-repeat;
+            min-height: 152px;
+        }
+
+        #OshaText {
+            font-size: 80px;
+            font-weight: bold;
+            color: tomato !important;
+            height: 100px;
+            line-height: 100px;
+            width: 100px;
+            display: inline-block;
+            margin-top: 25px;
+            margin-left: 8px;
+        }
+
+        .oshaPostFix {
+            font-size: 35px;
+            margin-left: 20px;
+            line-height: 100px;
+            color: black !important;
+        }
+
+        .noLink, .noLink:link, .noLink:visited, .noLink:hover {
+            text-decoration: none !important;
+        }
+
+        #OshaSign {
+            height: 348px;
+            width: 250px;
+            background-image: url("Osha.png");
+            background-position: right top;
+            background-repeat: no-repeat;
+            float: right;
+        }
+
+        #DaysSinceCarrierKill {
+            /*border: 1px solid red;*/
+            position: relative;
+            right: 120px;
+            top: 155px;
+            height: 30px;
+            line-height: 30px;
+            width: 100px;
+            display: inline-block;
+            font-size: 30px;
+            color: tomato;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
     <script>
+
+        // Customize here.
+
+        var AllianceName = "FCON"; // This is only used for headers. Doesn't have to be exact.
+        var AllianceId = "1006830534"; // This is used to pull data from ZKillboard. You can find it in the zkillboard urls, for alliance.
+
+        var RegionName = "Branch"; // This is only used for headers. Doesn't have to be exact.
+        var RegionId = "10000055"; // This is used to pull data from ZKillboard. You can find it in the zkillboard urls, for region.
+
+        // End of customize. Don't touch below.
 
         var Corps = [];
         var CorpsAsArray = [];
@@ -136,6 +205,17 @@
             var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
             // Return array of year and week number
             return weekNo;
+        }
+
+        function getDateOfISOWeek(w, y) {
+            var simple = new Date(y, 0, 1 + (w - 1) * 7);
+            var dow = simple.getDay();
+            var ISOweekStart = simple;
+            if (dow <= 4)
+                ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+            else
+                ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+            return ISOweekStart;
         }
 
         function AddToCorp(corpName, value, id) {
@@ -163,8 +243,38 @@
             }
         }
 
+        function GetLastCarrierKill(idControl, daysControl) {
+            var url = "https://zkillboard.com/api/losses/regionID/" + RegionId + "/group/547/allianceID/" + AllianceId + "/limit/1/no-items/no-attackers/";
+            $.get(url, function (data) {
+                var killId = data[0].killID;
+                var killDate = data[0].killTime;
+                var d = new Date();
+                Date.UTC(d.getFullYear, d.getMonth(), d.getDate, d.getHours, d.getMinutes, d.getSeconds)
+                // Prep killDate
+                var d = new Date(killDate);
+                var dutc = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds());
+                var d2 = new Date(dutc);
+
+                var days = CountDays(new Date(), d2);
+                if (days > 99) {
+                    daysControl.css("font-size", "60px");
+                }
+                daysControl.text(days);
+                //idControl.attr("href", "http://www.zkillboard.com/kill/" + killId + "/");
+            });
+        }
+
+        function CountDays(firstDate, secondDate) {
+            var oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+            //var firstDate = new Date(2008, 01, 12);
+            //var secondDate = new Date(2008, 01, 22);
+
+            var diffDays = Math.floor(Math.abs((firstDate.getTime() - secondDate.getTime()) / (oneDay)));
+            return diffDays;
+        }
+
         function GetTotal(startTime, endTime, totalControl, attackerName, attackerControl, percentageControl, callback) {
-            var urlString = "https://zkillboard.com/api/losses/regionID/10000055/allianceID/1006830534/startTime/" +
+            var urlString = "https://zkillboard.com/api/losses/regionID/" + RegionId + "/allianceID/" + AllianceId +"/startTime/" +
 				startTime + "/endTime/" + endTime + "/no-items/";
 
             if (attackerName.length == 0) {
@@ -204,8 +314,8 @@
                 };
 
                 trueArray.push(
-					newCorp
-				)
+                    newCorp
+                );
             }
             trueArray.sort(function (a, b) {
                 a = a.lost;
@@ -239,7 +349,7 @@
                 html += (parseInt(idx) + 1);
             }
             html += "</td><td style=\"width:0%; white-space: nowrap;\"><a target=\"_blank\" href=\"https://zkillboard.com/corporation/" + corpId +
-			 	"/region/10000055/\">" + corpname + "</a></td><td style=\"width:100%\">";
+			 	"/region/" + RegionId + "/\">" + corpname + "</a></td><td style=\"width:100%\">";
             html += "<div class=\"progress\">"
             html += "<span class=\"progressBarText\">ISK " + lost.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,") + "</span>";
 
@@ -253,7 +363,7 @@
 
         function GetTotalForWeek(week, pagenum, control, total, attackerControl, attackerName, attackerTotal) {
             var d = new Date();
-            var urlString = "https://zkillboard.com/api/losses/regionID/10000055/allianceID/1006830534/week/" + week + "/page/" + pagenum + "/no-items/";
+            var urlString = "https://zkillboard.com/api/losses/regionID/" + RegionId + "/allianceID/" + AllianceId + "/page/" + pagenum + "/no-items/";
             //if (attackerName.length == 0){
             //	urlString += "no-attackers/";
             //}
@@ -287,6 +397,8 @@
                 }
                 else {
                     UpdateCorpStats();
+                    RateAttackers();
+                    BindAutoComplete();
                 }
             });
         }
@@ -309,7 +421,39 @@
             return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
         }
 
+        function formatDate(d) {
+            var m_names = new Array("January", "February", "March",
+                                    "April", "May", "June", "July", "August", "September",
+                                    "October", "November", "December");
+
+            var curr_date = d.getDate();
+            var sup = "";
+            if (curr_date == 1 || curr_date == 21 || curr_date == 31) {
+                sup = "st";
+            }
+            else if (curr_date == 2 || curr_date == 22) {
+                sup = "nd";
+            }
+            else if (curr_date == 3 || curr_date == 23) {
+                sup = "rd";
+            }
+            else {
+                sup = "th";
+            }
+
+            var curr_month = d.getMonth();
+            var curr_year = d.getFullYear();
+
+            return curr_date + "<sup>" + sup + "</sup> of " + m_names[curr_month] + " " + curr_year;
+        }
+
         $(function () {
+            $("#carrierKillLink").attr("href", "https://zkillboard.com/alliance/" + AllianceId + "/losses/region/" + RegionId + "/group/547/");
+            $("#zKillboardLink").attr("href", "https://zkillboard.com/alliance/" + AllianceId + "/region/" + RegionId + "/");
+            $("#AllianceName").text(AllianceName);
+            $("#RegionName").text(RegionName);
+
+
             var attackerName = getParameterByName("attacker");
             $(".attackerName").text(attackerName);
             attackerName = attackerName.toLocaleUpperCase();
@@ -322,6 +466,10 @@
             $("#yesterdayDate").text(d.toDateString());
             var yesterday = GetTimeLimit(d);
 
+            // Set week dates
+            var weekStartDate = getDateOfISOWeek(weekNo, d.getFullYear());
+            $("#weekDate").html(formatDate(weekStartDate));
+
             GetTotal(today.Start, today.End, $("#iskValueToday"), attackerName, $("#iskValueTodayAttacker"), $("#attackerPercentageToday"), function () {
                 GetTotal(yesterday.Start, yesterday.End, $("#iskValueYesterday"), attackerName, $("#attackerPercentageYesterday"), $("#iskValueYesterdayAttacker"), function () {
                     $("#Working").hide();
@@ -332,9 +480,15 @@
                     GetTotalForWeek(weekNo, 1, $("#iskValueWeek"), 0, $("#iskValueWeekAttacker"), attackerName, 0);
                 });
             });
+            GetLastCarrierKill($("#carrierKillLink"), $("#DaysSinceCarrierKill"));
 
+        });
+
+        function BindAutoComplete() {
             $("#attackerName").autocomplete({
                 source: Attackers,
+                minLength: 0,
+                sortResults: false,
                 select: function (event, ui) { SelectAttacker(event, ui); }
             });
 
@@ -355,7 +509,41 @@
                     SelectAttacker("", ui);
                 }
             });
-        });
+            $("#attackerName").focus(function () {
+                $(this).autocomplete("search");
+            });
+        }
+
+        function RateAttackers() {
+            var attackersWithIsk = [];
+            for (var idx = 0; idx < Attackers.length; idx++) {
+                var attacker = Attackers[idx];
+
+                var totalDamages = 0;
+                for (var iidx = 0; iidx < CorpsAsArray.length; iidx++) {
+                    var corp = CorpsAsArray[iidx];
+                    if (corp.Attackers[attacker] != undefined) {
+                        totalDamages += corp.Attackers[attacker];
+                    }
+                }
+                attackersWithIsk.push({
+                    Name: attacker,
+                    isk: totalDamages
+                });
+            }
+
+            attackersWithIsk.sort(function (a, b) {
+                a = a.isk;
+                b = b.isk;
+
+                return a > b ? -1 : (a < b ? 1 : 0);
+            });
+
+            Attackers = [];
+            for (var sdx = 0; sdx < attackersWithIsk.length; sdx++) {
+                Attackers.push(attackersWithIsk[sdx].Name);
+            }
+        }
 
         function SelectAttacker(e, ui) {
             var attackerName = ui.item.value;
@@ -391,7 +579,7 @@
         <div class="panel-heading">
             <div class="row">
                 <div class="col-xs-5 col-md-3">
-                    <h3 class="panel-title"> <span class="glyphicon glyphicon-home" aria-hidden="true"></span> FCON losses in Branch</h3>
+                    <h3 class="panel-title"> <span class="glyphicon glyphicon-home" aria-hidden="true"></span> <span id="AllianceName"></span> losses in <span id="RegionName"></span></h3>
                 </div>
                 <div class="col-xs-2 col-md-6">
 
@@ -403,36 +591,49 @@
         </div>
         <div class="panel-body">
             <div class="row">
-                <div class="col-xs-4 col-md-2 text-right"><h3>Today:</h3></div>
-                <div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueToday"></span></h3></div>
-            </div>
-            <div class="row">
-                <div class="col-xs-4 col-md-2 text-right"><h3>Yesterday:</h3></div>
-                <div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueYesterday"></span></h3></div>
-            </div>
-            <div class="row">
-                <div class="col-xs-4 col-md-2 text-right"><h3>This week:</h3></div>
-                <div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueWeek"></span></h3></div>
-            </div>
-            <div class="spacer">
-                <div class="attacker">
+                <div class="col-xs-8">
                     <div class="row">
-                        <div class="col-xs-4 col-md-2 text-right"><h3><small><span class="attackerName"></span>:</small></h3></div>
-                        <div class="col-xs-8">
-                            <h3 class="isk">
-                                <small>
-                                    <b>ISK <span id="iskValueWeekAttacker"></span></b>
-                                    (<span id="attackerPercentageWeek"></span>%)
-                                </small>
-                            </h3>
+                        <div class="col-xs-4 col-md-3 text-right"><h3>Today:</h3></div>
+                        <div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueToday"></span></h3></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-4 col-md-3 text-right"><h3>Yesterday:</h3></div>
+                        <div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueYesterday"></span></h3></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-4 col-md-3 text-right"><h3>This week:</h3></div>
+                        <div class="col-xs-8"><h3 class="isk">ISK <span id="iskValueWeek"></span></h3></div>
+                    </div>
+                    <div class="spacer">
+                        <div class="attacker">
+                            <div class="row">
+                                <div class="col-xs-4 col-md-3 text-right"><h3><small><span class="attackerName"></span>:</small></h3></div>
+                                <div class="col-xs-7">
+                                    <h3 class="isk">
+                                        <small>
+                                            <b>ISK <span id="iskValueWeekAttacker"></span></b>
+                                            (<span id="attackerPercentageWeek"></span>%)
+                                        </small>
+                                    </h3>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
+
+                <div class="col-xs-4 text-right">
+                    <a href="" id="carrierKillLink" target="_blank">
+                        <div id="OshaSign">
+                            <span id="DaysSinceCarrierKill">?</span>
+                        </div>
+                    </a>
                 </div>
             </div>
             <div class="row">
                 <div class="col-xs-12">
                     <div id="highscoreHeader">
                         Week <span id="weekNo"></span> highscore
+                        <div class="sub">(since <span id="weekDate"></span>)</div>
                     </div>
                     <div id="stats" class="well">
                         <table id="highscoreTable" class="table table-condensed"></table>
@@ -442,7 +643,7 @@
         </div>
     </div>
     <div>
-        Powered by <a href="https://zkillboard.com/region/10000055/"><b>zKillboard</b></a>
+        Powered by <a href="" target="_blank" id="zKillboardLink"><b>zKillboard</b></a>
     </div>
 </body>
 </html>
